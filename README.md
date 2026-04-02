@@ -13,6 +13,7 @@ Cross-platform audio transcription app with three interfaces sharing one core en
 
 - **🚀 Groq Whisper power**: High-speed transcription using `whisper-large-v3` or `whisper-large-v3-turbo`.
 - **🎨 Premium UI**: Modern, dark-themed "glassmorphism" web interface with drag-and-drop, real-time progress, and transcript preview.
+- **📜 Local-First History**: Built-in transcription session history saved securely in the browser, featuring single-click recall and bulk JSON exports via native OS dialogs.
 - **🌈 Colorful CLI**: Upgraded CLI with ANSI color status tracking and simplified one-command syntax.
 - **🖱️ OS-Level Integration**: Right-click transcription for Windows (Registry), Linux (Nautilus), and macOS (Automator).
 - **📦 Large File Support**: Automatic chunking and sequential processing for files exceeding API limits.
@@ -116,7 +117,6 @@ Covered:
 - Batch transcription support
 - Additional output formats (`.srt`, `.json`)
 - Language detection and language hints
-- Persistent job storage for web UI
 - Progress streaming via SSE/WebSocket
 
 ## Troubleshooting

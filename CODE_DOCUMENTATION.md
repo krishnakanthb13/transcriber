@@ -31,6 +31,7 @@ The heart of the application. It is completely decoupled from any UI.
     - When a file is uploaded, a background task is spawned.
     - A `JobStore` maintains the state and progress.
     - The frontend polls the status until completion.
+    - **Local-First History**: Finished transcripts, alongside generated metadata and preview snippets, are saved to the browser's `localStorage` (via `index.html` scripts). This provides persistent history and bulk-JSON export without requiring an external database.
 
 ### 3. Integrations (`integrations/`)
 

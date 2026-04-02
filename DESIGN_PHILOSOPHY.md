@@ -29,6 +29,6 @@ The engine is built to **Fail Gracefully**:
 
 ### 5. Local-First Power
 While we use a Cloud API (Groq) for the heavy lifting, **the user stays in control**:
-- No cloud database is used.
+- No cloud database is used. Features like the Web UI's Transcription History run entirely on browser `localStorage` and native File System Access APIs.
 - All files are processed locally and then sent via a secure HTTPS API.
 - Your transcripts are saved to **your** machine, in your folders, exactly where you expect them.
