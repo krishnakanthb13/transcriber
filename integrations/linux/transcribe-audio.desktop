@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Action
+Name=Transcribe Audio
+Icon=audio-x-generic
+Profiles=profile-zero;
+
+[X-Action-Profile profile-zero]
+MimeTypes=audio/*;
+Exec=/bin/bash -lc '"/ABSOLUTE/PATH/TO/transcribe-audio.sh" "%f"'
