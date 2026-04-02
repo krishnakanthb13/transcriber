@@ -1,5 +1,8 @@
-# Transcriber
+<p align="center">
+  <img src="assets/release_v0.0.11.png" alt="Transcriber v0.0.11 Release Image" width="800">
+</p>
 
+# Transcriber
 Cross-platform audio transcription app with three interfaces sharing one core engine:
 
 - CLI command (`transcribe`)
