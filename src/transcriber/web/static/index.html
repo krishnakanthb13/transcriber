@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transcriber — Audio to Text</title>
+    <meta name="description" content="Upload audio files and transcribe them instantly using Groq Whisper AI. Fast, accurate, cross-platform." />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="card">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-icon" aria-hidden="true">🎙️</div>
+        <h1>Transcriber</h1>
+      </div>
+      <p class="subtitle">Drop an audio file and get an instant, AI-powered transcript. Same engine as the CLI and right-click integrations.</p>
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <span class="drop-zone-icon">📂</span>
+        <div class="drop-zone-text"><strong>Click to browse</strong> or drag &amp; drop your audio file</div>
+        <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.flac,.ogg,.aac,.wma,.mp4,.mpeg,audio/*" />
+      </div>
+
+      <!-- Selected File Info -->
+      <div class="file-info" id="fileInfo">
+        <span class="file-icon">🎵</span>
+        <span class="file-name" id="fileName"></span>
+        <span class="file-size" id="fileSize"></span>
+        <button class="file-remove" id="fileRemove" type="button" title="Remove file">✕</button>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <select id="modelSelect" aria-label="Select transcription model">
+          <option value="whisper-large-v3">whisper-large-v3</option>
+          <option value="whisper-large-v3-turbo">whisper-large-v3-turbo (faster)</option>
+        </select>
+        <button class="btn-primary" id="startBtn" disabled>
+          <span class="spinner"></span>
+          <span class="btn-text">Transcribe</span>
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section" id="progressSection">
+        <div class="progress-header">
+          <span class="progress-label" id="progressLabel">Preparing…</span>
+          <span class="progress-percent" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-section" id="resultSection">
+        <div id="resultBadge" class="result-badge"></div>
+
+        <div class="result-meta" id="resultMeta"></div>
+
+        <div class="transcript-box" id="transcriptBox">
+          <div class="transcript-header">
+            <span class="transcript-title">Transcript</span>
+            <button class="btn-copy" id="copyBtn" type="button">Copy</button>
+          </div>
+          <div class="transcript-content" id="transcriptContent"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        Powered by <a href="https://groq.com" target="_blank" rel="noopener">Groq Whisper</a> · v0.1.0
+      </div>
+    </main>
+
+    <script>
+      /* ─── DOM refs ─── */
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const fileInfo = document.getElementById('fileInfo');
+      const fileName = document.getElementById('fileName');
+      const fileSize = document.getElementById('fileSize');
+      const fileRemove = document.getElementById('fileRemove');
+      const modelSelect = document.getElementById('modelSelect');
+      const startBtn = document.getElementById('startBtn');
+      const progressSection = document.getElementById('progressSection');
+      const progressLabel = document.getElementById('progressLabel');
+      const progressPercent = document.getElementById('progressPercent');
+      const progressBar = document.getElementById('progressBar');
+      const resultSection = document.getElementById('resultSection');
+      const resultBadge = document.getElementById('resultBadge');
+      const resultMeta = document.getElementById('resultMeta');
+      const transcriptBox = document.getElementById('transcriptBox');
+      const transcriptContent = document.getElementById('transcriptContent');
+      const copyBtn = document.getElementById('copyBtn');
+
+      let selectedFile = null;
+
+      /* ─── Helpers ─── */
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+      }
+
+      function formatDuration(sec) {
+        if (sec < 60) return sec.toFixed(1) + 's';
+        const m = Math.floor(sec / 60);
+        const s = (sec % 60).toFixed(0);
+        return `${m}m ${s}s`;
+      }
+
+      function showFile(file) {
+        selectedFile = file;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatBytes(file.size);
+        fileInfo.classList.add('visible');
+        dropZone.style.display = 'none';
+        startBtn.disabled = false;
+      }
+
+      function clearFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.classList.remove('visible');
+        dropZone.style.display = '';
+        startBtn.disabled = true;
+      }
+
+      function setLoading(state) {
+        if (state) {
+          startBtn.classList.add('loading');
+          startBtn.disabled = true;
+        } else {
+          startBtn.classList.remove('loading');
+          startBtn.disabled = !selectedFile;
+        }
+      }
+
+      /* ─── Drag & Drop ─── */
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) showFile(e.dataTransfer.files[0]);
+      });
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) showFile(fileInput.files[0]);
+      });
+
+      fileRemove.addEventListener('click', clearFile);
+
+      /* ─── Copy Button ─── */
+      copyBtn.addEventListener('click', () => {
+        const text = transcriptContent.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+        });
+      });
+
+      /* ─── Poll Job ─── */
+      async function pollJob(jobId) {
+        while (true) {
+          const resp = await fetch(`/api/transcriptions/${jobId}`);
+          const data = await resp.json();
+          const pct = data.progress?.percent ?? 0;
+
+          progressBar.style.width = pct + '%';
+          progressPercent.textContent = pct + '%';
+          progressLabel.textContent = data.progress?.message || data.status;
+
+          if (data.status === 'completed') {
+            showResult(data);
+            return;
+          }
+
+          if (data.status === 'failed') {
+            showError(data);
+            return;
+          }
+
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
+
+      /* ─── Display Result ─── */
+      function showResult(data) {
+        setLoading(false);
+        resultSection.classList.add('visible');
+
+        resultBadge.className = 'result-badge success';
+        resultBadge.textContent = '✓ Transcription Complete';
+
+        const r = data.result || {};
+        const meta = r.metadata || {};
+        const chunks = r.chunk_count || 1;
+        const dur = r.duration_sec != null ? formatDuration(r.duration_sec) : '—';
+        const model = r.model_used || '—';
+
+        resultMeta.innerHTML = `
+          <div class="meta-item"><div class="meta-label">Model</div><div class="meta-value">${model}</div></div>
+          <div class="meta-item"><div class="meta-label">Duration</div><div class="meta-value">${dur}</div></div>
+          <div class="meta-item"><div class="meta-label">Chunks</div><div class="meta-value">${chunks}</div></div>
+        `;
+
+        const text = r.transcript_text || '';
+        if (text) {
+          transcriptBox.style.display = '';
+          transcriptContent.textContent = text;
+        } else {
+          transcriptBox.style.display = 'none';
+        }
+      }
+
+      function showError(data) {
+        setLoading(false);
+        resultSection.classList.add('visible');
+
+        resultBadge.className = 'result-badge failed';
+        resultBadge.textContent = '✕ Transcription Failed';
+
+        resultMeta.innerHTML = '';
+        transcriptBox.style.display = '';
+        transcriptContent.textContent = data.error || 'An unknown error occurred.';
+      }
+
+      /* ─── Start Transcription ─── */
+      startBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        /* reset UI */
+        setLoading(true);
+        resultSection.classList.remove('visible');
+        progressSection.classList.add('visible');
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        progressLabel.textContent = 'Uploading…';
+
+        const form = new FormData();
+        form.append('file', selectedFile);
+        form.append('model', modelSelect.value);
+
+        try {
+          const resp = await fetch('/api/transcriptions', { method: 'POST', body: form });
+          if (!resp.ok) throw new Error(`Upload failed (${resp.status})`);
+          const data = await resp.json();
+          await pollJob(data.job_id);
+        } catch (err) {
+          setLoading(false);
+          showError({ error: err.message });
+        }
+      });
+    </script>
+  </body>
+</html>
