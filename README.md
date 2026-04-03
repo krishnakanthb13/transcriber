@@ -1,9 +1,17 @@
 <p align="center">
-  <img src="assets/release_v0.0.11.png" alt="Transcriber v0.0.11 Release Image" width="800">
+  <img src="assets/release_v0.0.17.png" alt="Transcriber v0.0.17 Release Image" width="45%">
+  <img src="assets/release_v0.0.11.png" alt="Transcriber v0.0.11 Release Image" width="45%">
 </p>
 
 # Transcriber
+[![Latest Release](https://img.shields.io/badge/Release-v0.0.17-blueviolet.svg)](RELEASE_NOTES.md)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+> **What's New in v0.0.17?** 🚀
+> - **✨ Transcription History Sidebar**: Never lose a session again with local-first browser storage.
+> - **🧩 Context-Aware Overlapping Chunking**: Smarter audio splitting for higher transcription accuracy.
+> - **🔁 Resilient Pipeline**: Automatic retry logic for improved reliability on long files.
+> - **🤝 Open Governance**: Officially moving to GPL v3 with a new contributor guide.
 
 Cross-platform audio transcription app with three interfaces sharing one core engine:
 
