@@ -46,7 +46,9 @@ chmod +x LaunchTranscriber.sh
 
 ## Configuration
 
-Edit [.env](.env) to customize behavior:
+Edit [.env](.env) to customize behavior (these changes apply only to your local user environment):
+
+> **Developer Note:** If you wish to change the baseline architectural defaults for the entire application (rather than just your local override), you must update the `TranscriptionConfig` class inside `src/transcriber/core/models.py`. The application uses `models.py` as the strict single source of truth for all default fallbacks, ensuring a "Don't Repeat Yourself" (DRY) paradigm.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -54,6 +56,8 @@ Edit [.env](.env) to customize behavior:
 | `TRANSCRIBER_MODEL` | `whisper-large-v3` | Model to use (`turbo` also supported). |
 | `TRANSCRIBER_MAX_UPLOAD_MB` | `25` | Ceiling before the engine switches to chunking. |
 | `TRANSCRIBER_CHUNK_DURATION_SECONDS` | `600` | Duration (in seconds) of each chunk for large files. |
+| `TRANSCRIBER_CHUNK_OVERLAP_SECONDS` | `5` | Overlap in seconds to maintain context between chunks. |
+| `TRANSCRIBER_MAX_RETRIES` | `3` | Max retries for failed chunk API transcription calls. |
 | `TRANSCRIBER_LOG_FILE` | `logs/transcriber.log` | Path to log file. Set to **`OFF`** to disable. |
 
 ## CLI Usage
@@ -126,6 +130,7 @@ Covered:
 - `GROQ_API_KEY is required`: set key in `.env` or shell environment.
 - Unsupported format errors: ensure extension is in allowed list and file is valid media.
 - Chunking/export failures: install `ffmpeg` and verify it is on `PATH`.
+- Overlapping Text Deduplication: The engine overlaps chunks by default (5s) and uses a heuristic to deduplicate overlapping strings in the final text. Highly identical, repeated phrases located precisely at a boundary may result in slight duplications or drops in very rare edge cases.
 
 ## Documentation
 

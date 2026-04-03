@@ -20,8 +20,8 @@ The heart of the application. It is completely decoupled from any UI.
 - **`chunking.py`**: Contains the `ChunkPlanner`. It calculates how to split files into segments if they exceed the `TRANSCRIBER_MAX_UPLOAD_MB` limit.
 - **`groq_client.py`**: A specialized wrapper for the Groq API, handling the multipart transcription requests.
 - **`audio.py`**: Uses `pydub` to load and export audio segments. It handles the low-level media conversions required for chunking.
-- **`models.py`**: Defines the `TranscriptionRequest` and `TranscriptionResult` dataclasses used throughout the app.
-- **`settings.py`**: Handles environment variable loading and validation via `.env` files.
+- **`models.py`**: Defines the `TranscriptionRequest` and `TranscriptionResult` dataclasses used throughout the app. The `TranscriptionConfig` here serves as the **Single Source of Truth** for all baseline application defaults (e.g., max retries, overlap seconds).
+- **`settings.py`**: Handles environment variable loading and overrides via the `.env` file. It reads user-specific configurations from the environment and falls back securely to the defaults in `models.py` using dynamic dictionary kwargs, maintaining a strict DRY pattern.
 - **`logging_utils.py`**: Provides standardized logging configuration for all interfaces.
 
 ### 2. Interfaces
