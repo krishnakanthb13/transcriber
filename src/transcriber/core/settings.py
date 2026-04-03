@@ -21,18 +21,25 @@ def load_settings() -> Settings:
     if not api_key:
         raise ValueError("GROQ_API_KEY is required. Set it in your environment or .env file.")
 
-    default_model = os.getenv("TRANSCRIBER_MODEL", "whisper-large-v3").strip()
-    max_upload_mb = int(os.getenv("TRANSCRIBER_MAX_UPLOAD_MB", "25"))
-    chunk_duration_seconds = int(os.getenv("TRANSCRIBER_CHUNK_DURATION_SECONDS", "600"))
+    kwargs = {"api_key": api_key}
     
-    log_file_raw = os.getenv("TRANSCRIBER_LOG_FILE", "logs/transcriber.log").strip()
-    log_file = Path(log_file_raw) if log_file_raw and log_file_raw.upper() != "OFF" else None
+    if default_model := os.getenv("TRANSCRIBER_MODEL"):
+        kwargs["default_model"] = default_model.strip()
+        
+    if max_upload_mb := os.getenv("TRANSCRIBER_MAX_UPLOAD_MB"):
+        kwargs["max_upload_mb"] = int(max_upload_mb)
+        
+    if chunk_duration := os.getenv("TRANSCRIBER_CHUNK_DURATION_SECONDS"):
+        kwargs["chunk_duration_seconds"] = int(chunk_duration)
+        
+    if chunk_overlap := os.getenv("TRANSCRIBER_CHUNK_OVERLAP_SECONDS"):
+        kwargs["chunk_overlap_seconds"] = int(chunk_overlap)
+        
+    if max_retries := os.getenv("TRANSCRIBER_MAX_RETRIES"):
+        kwargs["max_retries"] = int(max_retries)
+        
+    if log_file_raw := os.getenv("TRANSCRIBER_LOG_FILE"):
+        kwargs["log_file"] = Path(log_file_raw.strip()) if log_file_raw.strip().upper() != "OFF" else None
 
-    config = TranscriptionConfig(
-        api_key=api_key,
-        default_model=default_model,
-        max_upload_mb=max_upload_mb,
-        chunk_duration_seconds=chunk_duration_seconds,
-        log_file=log_file,
-    )
+    config = TranscriptionConfig(**kwargs)
     return Settings(config=config)

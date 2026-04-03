@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import difflib
 import tempfile
+import time
 from collections.abc import Callable
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -65,6 +67,7 @@ class TranscriptionEngine:
                 duration_seconds=audio_info.duration_seconds,
                 max_upload_bytes=self.config.max_upload_bytes,
                 preferred_chunk_duration_seconds=self.config.chunk_duration_seconds,
+                overlap_seconds=self.config.chunk_overlap_seconds,
             )
 
             if chunk_plan.chunk_count == 1:
@@ -75,13 +78,14 @@ class TranscriptionEngine:
             else:
                 emit("preparing", f"Preparing {chunk_plan.chunk_count} chunks", 15)
                 segment = load_segment(audio_info.path)
+                stride_ms = chunk_plan.stride_seconds * 1000
                 chunk_ms = chunk_plan.chunk_duration_seconds * 1000
 
                 with tempfile.TemporaryDirectory(prefix="transcriber_chunks_") as tmp_dir:
                     tmp_root = Path(tmp_dir)
                     for idx in range(chunk_plan.chunk_count):
-                        start_ms = idx * chunk_ms
-                        end_ms = min(len(segment), (idx + 1) * chunk_ms)
+                        start_ms = idx * stride_ms
+                        end_ms = min(len(segment), start_ms + chunk_ms)
                         chunk_segment = segment[start_ms:end_ms]
 
                         chunk_path = tmp_root / f"chunk_{idx + 1:03d}.mp3"
@@ -93,7 +97,21 @@ class TranscriptionEngine:
                             f"Transcribing chunk {idx + 1}/{chunk_plan.chunk_count}",
                             min(percent, 90),
                         )
-                        response = self.client.transcribe_file(chunk_path, model=model)
+                        
+                        response = None
+                        last_error = None
+                        for attempt in range(max(1, self.config.max_retries)):
+                            try:
+                                response = self.client.transcribe_file(chunk_path, model=model)
+                                break
+                            except Exception as e:
+                                last_error = e
+                                self.logger.warning("Chunk %d retry %d due to error: %s", idx + 1, attempt + 1, e)
+                                time.sleep(2 ** attempt)
+                        
+                        if response is None:
+                            raise RuntimeError(f"Chunk transcription failed after {self.config.max_retries} retries: {last_error}")
+
                         transcript_parts.append(response["text"].strip())
                         metadata["chunks"].append(
                             {
@@ -106,7 +124,7 @@ class TranscriptionEngine:
                         )
 
             emit("merging", "Combining transcript segments", 95)
-            transcript_text = "\n\n".join([part for part in transcript_parts if part])
+            transcript_text = self._merge_transcript_parts(transcript_parts)
             output_path.write_text(transcript_text, encoding="utf-8")
 
             finished_at = datetime.now(tz=timezone.utc)
@@ -156,3 +174,28 @@ class TranscriptionEngine:
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         return output_path
+
+    def _merge_transcript_parts(self, parts: list[str]) -> str:
+        if not parts:
+            return ""
+        
+        merged_text = parts[0]
+        for next_part in parts[1:]:
+            if not next_part:
+                continue
+                
+            search_len = min(400, len(merged_text), len(next_part))
+            if search_len > 10:
+                end_of_t1 = merged_text[-search_len:]
+                start_of_t2 = next_part[:search_len]
+                
+                matcher = difflib.SequenceMatcher(None, end_of_t1, start_of_t2)
+                match = matcher.find_longest_match(0, len(end_of_t1), 0, len(start_of_t2))
+                
+                if match.size > 15:
+                    merged_text = merged_text + " " + next_part[match.b + match.size:].lstrip()
+                    continue
+            
+            merged_text = merged_text + "\n\n" + next_part
+            
+        return merged_text

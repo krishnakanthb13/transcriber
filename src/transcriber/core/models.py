@@ -12,6 +12,13 @@ class TranscriptionConfig:
     default_model: str = "whisper-large-v3"
     max_upload_mb: int = 25
     chunk_duration_seconds: int = 600
+    
+    # Determines the overlap window in seconds between chunks to ensure seamless text merging
+    chunk_overlap_seconds: int = 5
+    
+    # Controls the maximum number of times to retry transcribing a chunk if the API request fails
+    max_retries: int = 3
+    
     log_file: Path | None = Path("logs/transcriber.log")
     allowed_extensions: tuple[str, ...] = (
         ".mp3",
