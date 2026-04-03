@@ -3,6 +3,8 @@
 </p>
 
 # Transcriber
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 Cross-platform audio transcription app with three interfaces sharing one core engine:
 
 - CLI command (`transcribe`)
@@ -124,3 +126,12 @@ Covered:
 - `GROQ_API_KEY is required`: set key in `.env` or shell environment.
 - Unsupported format errors: ensure extension is in allowed list and file is valid media.
 - Chunking/export failures: install `ffmpeg` and verify it is on `PATH`.
+
+## Documentation
+
+For more in-depth information, please refer to the specific documentation files:
+- 📖 [Code Documentation](CODE_DOCUMENTATION.md) - System architecture and module breakdown
+- 🧠 [Design Philosophy](DESIGN_PHILOSOPHY.md) - Core principles and UI aesthetics
+- 🤝 [Contributing Guide](CONTRIBUTING.md) - How to report bugs and submit pull requests
+- 🚀 [Release Notes](RELEASE_NOTES.md) - Version history and changelog
+- 💬 [Social Media](SOCIAL_MEDIA.md) - Project announcements and content

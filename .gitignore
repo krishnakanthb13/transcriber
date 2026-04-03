@@ -33,3 +33,6 @@ tests/.artifacts/
 
 # Package
 src/transcriber.egg-info/
+
+# Local agents
+.gemini/
