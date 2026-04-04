@@ -37,7 +37,7 @@ cd transcriber
 
 # 2. Run the setup scripts (creates virtual env)
 # Windows
-.\scripts\setup.bat
+.\scripts\setup.ps1
 # Linux/macOS
 bash scripts/setup.sh
 
@@ -48,7 +48,7 @@ bash scripts/setup.sh
 source .venv/bin/activate
 
 # 4. Install Dev Dependencies
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 ```
 
 ## Pre-Submission Checklist
